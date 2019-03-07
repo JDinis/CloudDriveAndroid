@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/login_page"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+    tools:context=".LoginActivity">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.9"
+        android:contentDescription="@string/loginBackground"
+        android:scaleType="centerCrop"
+        app:srcCompat="@drawable/clouddrivelogin" />
+
+    <EditText
+        android:id="@+id/userEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginRight="30dp"
+        android:alpha="0.5"
+        android:background="@android:color/white"
+        android:hint="@string/promptUsername"
+        android:inputType="textAutoComplete" />
+
+    <EditText
+        android:id="@+id/passEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/userEditText"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="30dp"
+        android:ems="10"
+        android:inputType="textPassword"
+        android:alpha="0.5"
+        android:background="@android:color/white"
+        android:hint="@string/promptPassword">
+    </EditText>
+
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/passEditText"
+        android:layout_alignStart="@id/passEditText"
+        android:layout_alignLeft="@id/passEditText"
+        android:layout_alignEnd="@id/passEditText"
+        android:layout_alignRight="@id/passEditText"
+        android:layout_marginStart="@dimen/loginButtonLateralMargin"
+        android:layout_marginLeft="@dimen/loginButtonLateralMargin"
+        android:layout_marginTop="@dimen/loginMarginTop"
+        android:layout_marginEnd="@dimen/loginButtonLateralMargin"
+        android:layout_marginRight="@dimen/loginButtonLateralMargin"
+        android:layout_marginBottom="@dimen/loginMarginTop"
+        android:alpha="0.8"
+        android:background="@color/loginButtonColor"
+        android:padding="@dimen/loginBtnPadding"
+        android:text="@string/login" />
+
+    <ProgressBar
+        android:id="@+id/loginProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/loginButton"
+        android:layout_alignStart="@+id/loginButton"
+        android:layout_alignLeft="@+id/loginButton"
+        android:layout_alignEnd="@+id/loginButton"
+        android:layout_alignRight="@+id/loginButton"
+        android:layout_marginStart="@dimen/loginProgressLateralMargin"
+        android:layout_marginLeft="@dimen/loginProgressLateralMargin"
+        android:layout_marginTop="@dimen/loginMarginTop"
+        android:layout_marginEnd="@dimen/loginProgressLateralMargin"
+        android:layout_marginRight="@dimen/loginProgressLateralMargin"
+        android:visibility="invisible" />
+
+</RelativeLayout>
