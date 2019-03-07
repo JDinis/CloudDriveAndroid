@@ -1,18 +1,24 @@
 package pt.jpdinis;
 
+import android.content.res.Resources;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> {
     private String[] mDataset;
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
+        public ImageView imageView;
         public TextView textView;
-        public MyViewHolder(TextView v) {
+        public MyViewHolder(LinearLayout v) {
             super(v);
-            textView = v;
+            imageView = v.findViewById(R.id.imageView2);
+            textView = v.findViewById(R.id.textView);
         }
     }
 
@@ -23,7 +29,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
     @Override
     public FileAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent,
                                                        int viewType) {
-        TextView v = (TextView) LayoutInflater.from(parent.getContext())
+        LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.filelistitem, parent, false);
 
         MyViewHolder vh = new MyViewHolder(v);
@@ -36,7 +42,17 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         holder.textView.setText(mDataset[position]);
+        String ext = mDataset[position].substring(mDataset[position].lastIndexOf('.')+1);
 
+        if(ext.equals("txt")){
+            holder.imageView.setBackgroundResource(R.drawable.document);
+        }else if(ext.equals("png")||ext.equals("jpg")||ext.equals("jpeg")||ext.equals("gif")||ext.equals("webp")||ext.equals("bmp")||ext.equals("tiff")){
+            holder.imageView.setBackgroundResource(R.drawable.image);
+        }else if(ext.equals("rar")||ext.equals("7z")||ext.equals("zip")||ext.equals("tar")||ext.equals("gz")||ext.equals("tgz")){
+            holder.imageView.setBackgroundResource(R.drawable.image);
+        }else {
+            holder.imageView.setBackgroundResource(R.drawable.cloudfile);
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)

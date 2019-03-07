@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <drawable name="item_checked">@color/colorPrimary</drawable>
+    <drawable name="item_focused">@color/colorAccent</drawable>
+    <drawable name="item_activated">@color/design_default_color_primary</drawable>
+    <drawable name="item_pressed">@color/colorPrimaryDark</drawable>
+</resources>

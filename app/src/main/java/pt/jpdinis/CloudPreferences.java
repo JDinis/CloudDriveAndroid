@@ -3,10 +3,10 @@ package pt.jpdinis;
 import android.app.Activity;
 import android.content.SharedPreferences;
 
-public class Preferences {
+public class CloudPreferences {
     SharedPreferences Preferences;
 
-    public Preferences(Activity activity){
+    public CloudPreferences(Activity activity){
         this.Preferences = activity.getSharedPreferences("CloudDrive",0);
     }
 

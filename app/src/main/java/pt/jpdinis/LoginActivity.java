@@ -3,20 +3,15 @@ package pt.jpdinis;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.ActionBar;
 import android.content.Intent;
-import android.content.SharedPreferences;
 
 import android.support.v7.app.AppCompatActivity;
-
-import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -26,9 +21,7 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.JsonNull;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -129,23 +122,24 @@ public class LoginActivity extends AppCompatActivity {
                     User user = new Gson().fromJson(response.body().getAsJsonObject().get("User").getAsJsonObject(),User.class);
 
                     if(response.body().getAsJsonObject().get("Error").getAsJsonObject().has("msg")){
-                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString()=="null"){
-                            new Preferences(loginActivity).setUser(user);
-                        }
+                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsJsonNull() == JsonNull.INSTANCE){
+                            new CloudPreferences(loginActivity).setUser(user);
+                        }else {
 
-                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString().contains("Password")){
-                            mPasswordView.setError(getString(R.string.errorIncorrectPassword));
-                            focusView = mPasswordView;
-                            cancel = true;
-                        }
+                            if (response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString().contains("Password")) {
+                                mPasswordView.setError(getString(R.string.errorIncorrectPassword));
+                                focusView = mPasswordView;
+                                cancel = true;
+                            }
 
-                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString().contains("User")){
-                            mUserView.setError(getString(R.string.errorInvalidUsername));
-                            focusView = mUserView;
-                            cancel = true;
+                            if (response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString().contains("User")) {
+                                mUserView.setError(getString(R.string.errorInvalidUsername));
+                                focusView = mUserView;
+                                cancel = true;
+                            }
                         }
                     }else{
-                        new Preferences(loginActivity).setUser(user);
+                        new CloudPreferences(loginActivity).setUser(user);
                     }
                 }else{
                     mUserView.setError(getString(R.string.errorInvalidUsername));

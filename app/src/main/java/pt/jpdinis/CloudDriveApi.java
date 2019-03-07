@@ -23,6 +23,7 @@ import java.net.URL;
 import java.nio.Buffer;
 import java.nio.charset.Charset;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -32,6 +33,8 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Streaming;
+import retrofit2.http.Url;
 
 public interface CloudDriveApi {
     static String ApiURL = "https://clouddriveserver.azurewebsites.net/";
@@ -46,6 +49,10 @@ public interface CloudDriveApi {
     @FormUrlEncoded
     @POST("login")
     Call<JsonElement> login(@Field("username") String username,@Field("password") String password);
+
+    @Streaming
+    @GET("/search/{filename}")
+    Call<ResponseBody> downloadFile(@Path("filename") String filename);
 }
 
 

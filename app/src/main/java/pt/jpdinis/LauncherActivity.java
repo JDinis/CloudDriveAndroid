@@ -1,27 +1,13 @@
 package pt.jpdinis;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.Console;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -50,7 +36,7 @@ public class LauncherActivity extends AppCompatActivity {
         activity = this;
 
         CloudDriveApi service = retrofit.create(CloudDriveApi.class);
-        User user = new Preferences(this).getUser();
+        User user = new CloudPreferences(this).getUser();
         Intent activityIntent = null;
 
         if(user.getUsername()!=null) {
