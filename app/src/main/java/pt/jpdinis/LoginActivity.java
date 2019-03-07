@@ -23,11 +23,21 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 /**
- * A login screen that offers login via email/password.
+ * A login screen that offers login via Email/Password.
  */
 public class LoginActivity extends AppCompatActivity {
 
@@ -43,6 +53,8 @@ public class LoginActivity extends AppCompatActivity {
     private View mLoginFormView;
     boolean cancel = false;
     View focusView = null;
+    CloudDriveApi service;
+    Retrofit retrofit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +67,17 @@ public class LoginActivity extends AppCompatActivity {
 
         // Set up the login form.
         mUserView = (EditText) findViewById(R.id.userEditText);
+
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+        retrofit = new Retrofit.Builder()
+                .baseUrl(CloudDriveApi.ApiURL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+
 
         mPasswordView = (EditText) findViewById(R.id.passEditText);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -83,7 +106,7 @@ public class LoginActivity extends AppCompatActivity {
 
     /**
      * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
+     * If there are form errors (invalid Email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
@@ -92,54 +115,59 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String username = mUserView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        String Username = mUserView.getText().toString();
+        String Password = mPasswordView.getText().toString();
 
-        try {
-            JSONObject postparams = new JSONObject();
-            postparams.put("username",username);
-            postparams.put("password",password);
+        service = retrofit.create(CloudDriveApi.class);
 
-            CloudDriveApi.PostJSONData postJSONRunnable = new CloudDriveApi.PostJSONData("https://clouddriveserver.azurewebsites.net/login",postparams);
-            Thread t = new Thread(postJSONRunnable);
-            t.start();
-            JSONObject response;
+        Call<JsonElement> login = service.login(Username,Password);
 
-            while ((response=postJSONRunnable.getData())==null);
+        login.enqueue(new Callback<JsonElement>() {
+            @Override
+            public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                if(response.body().getAsJsonObject().has("User")){
+                    User user = new Gson().fromJson(response.body().getAsJsonObject().get("User").getAsJsonObject(),User.class);
 
-            if(response.has("User")){
-                if(response.getJSONObject("Error").has("msg")){
-                    if(response.getJSONObject("Error").getString("msg")=="null"){
-                        User.SetUserData(response,loginActivity);
-                    }
+                    if(response.body().getAsJsonObject().get("Error").getAsJsonObject().has("msg")){
+                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString()=="null"){
+                            new Preferences(loginActivity).setUser(user);
+                        }
 
-                    if(response.getJSONObject("Error").getString("msg").contains("password")){
-                        mPasswordView.setError(getString(R.string.errorIncorrectPassword));
-                        focusView = mPasswordView;
-                        cancel = true;
-                    }
+                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString().contains("Password")){
+                            mPasswordView.setError(getString(R.string.errorIncorrectPassword));
+                            focusView = mPasswordView;
+                            cancel = true;
+                        }
 
-                    if(response.getJSONObject("Error").getString("msg").contains("User")){
-                        mUserView.setError(getString(R.string.errorInvalidUsername));
-                        focusView = mUserView;
-                        cancel = true;
+                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString().contains("User")){
+                            mUserView.setError(getString(R.string.errorInvalidUsername));
+                            focusView = mUserView;
+                            cancel = true;
+                        }
+                    }else{
+                        new Preferences(loginActivity).setUser(user);
                     }
                 }else{
-                    User.SetUserData(response,loginActivity);
+                    mUserView.setError(getString(R.string.errorInvalidUsername));
+                    focusView = mUserView;
+                    cancel = true;
                 }
-            }else{
-                mUserView.setError(getString(R.string.errorInvalidUsername));
-                focusView = mUserView;
-                cancel = true;
             }
+
+            @Override
+            public void onFailure(Call<JsonElement> call, Throwable t) {
+                finish();
+            }
+        });
+
+        try {
+
 
             if (cancel) {
                 // There was an error; don't attempt login and focus the first
                 // form field with an error.
                 focusView.requestFocus();
             }
-        }  catch (JSONException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }

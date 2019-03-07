@@ -20,12 +20,25 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+       implements NavigationView.OnNavigationItemSelectedListener {
     private RecyclerView recyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
@@ -53,8 +66,40 @@ public class MainActivity extends AppCompatActivity
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
 
-        CloudDriveApi.GetJSONData getJSONData = new CloudDriveApi.GetJSONData("https://clouddriveserver.azurewebsites.net/files",new JSONObject());
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(CloudDriveApi.ApiURL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        CloudDriveApi service = retrofit.create(CloudDriveApi.class);
+        Call<JsonElement> files = service.listFiles();
+
+        files.enqueue(new Callback<JsonElement>() {
+            @Override
+            public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+               JsonArray files = response.body().getAsJsonObject().getAsJsonArray("files");
+               ArrayList<String> filenames = new ArrayList<>();
+
+               for(int i = 0; i<files.size();i++){
+                   filenames.add(files.get(i).getAsString());
+               }
+
+                String[] filex = filenames.toArray(new String[0]);
+                mAdapter = new FileAdapter(filex);
+                recyclerView.setAdapter(mAdapter);
+            }
+
+            @Override
+            public void onFailure(Call<JsonElement> call, Throwable t) {
+
+            }
+        });
+
+        /*CloudDriveApi.GetJSONData getJSONData = new CloudDriveApi.GetJSONData("https://clouddriveserver.azurewebsites.net/files",new JSONObject());
         Thread t = new Thread(getJSONData);
         t.start();
         JSONObject response;
@@ -76,7 +121,7 @@ public class MainActivity extends AppCompatActivity
         if(dataset!=null) {
             mAdapter = new FileAdapter(dataset);
             recyclerView.setAdapter(mAdapter);
-        }
+        }*/
     }
 
     @Override
@@ -91,7 +136,7 @@ public class MainActivity extends AppCompatActivity
 
     public void logout(View view){
         JSONObject object = new JSONObject();
-        CloudDriveApi.PostJSONData postJSONRunnable = new CloudDriveApi.PostJSONData("https://clouddriveserver.azurewebsites.net/smartlogout",object);
+        /*CloudDriveApi.PostJSONData postJSONRunnable = new CloudDriveApi.PostJSONData("https://clouddriveserver.azurewebsites.net/smartlogout",object);
         Thread t = new Thread(postJSONRunnable);
         t.start();
         JSONObject data;
@@ -103,7 +148,7 @@ public class MainActivity extends AppCompatActivity
 
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
-        finish();
+        finish();*/
     }
 
     @Override
@@ -112,8 +157,8 @@ public class MainActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.main, menu);
         TextView navTitle = (TextView) findViewById(R.id.nav_title);
         TextView navSubtitle = (TextView) findViewById(R.id.nav_subtitle);
-        navTitle.setText(User.Username);
-        navSubtitle.setText(User.Email);
+        /*navTitle.setText(User.Username);
+        navSubtitle.setText(User.Email);*/
         return true;
     }
 

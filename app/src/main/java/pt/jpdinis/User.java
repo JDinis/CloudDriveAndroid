@@ -1,41 +1,87 @@
 package pt.jpdinis;
 
 
-import android.app.Activity;
-import android.content.SharedPreferences;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import static android.content.Context.MODE_PRIVATE;
+import com.google.gson.annotations.SerializedName;
 
 public class User {
-    static String Username,FirstName,LastName,Email;
+    @SerializedName("firstName")
+    String FirstName;
+    @SerializedName("lastName")
+    String LastName;
+    @SerializedName("username")
+    String Username;
+    @SerializedName("password")
+    String Password;
+    @SerializedName("email")
+    String Email;
+    @SerializedName("profilepic")
+    String ProfilePic;
+    @SerializedName("admin")
+    boolean Admin;
 
-    public static void SetUserData(JSONObject data, Activity activity){
-        try {
-            SharedPreferences settings = activity.getSharedPreferences("CloudDrive", MODE_PRIVATE);
-            SharedPreferences.Editor editor = settings.edit();
-            JSONObject user = data.getJSONObject("User");
-            Username = user.getString("username");
-            FirstName = user.has("firstName") ? user.getString("firstName") : "";
-            LastName = user.has("lastName") ? user.getString("lastName") : "";
-            Email = user.has("email") ? user.getString("email") : "";
-            editor.putString("username",Username);
-            editor.putString("firstName",FirstName);
-            editor.putString("lastName",LastName);
-            editor.putString("email",Email);
-            editor.commit();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public User( String firstName, String lastName,String username,String password, String email, String profilepic,  Boolean admin) {
+        this.Username = username;
+        this.FirstName = firstName;
+        this.LastName = lastName;
+        this.Email = email;
+        this.ProfilePic = profilepic;
+        this.Password = password;
+        this.Admin = admin;
     }
 
-    public static void GetUserData(Activity activity){
-        SharedPreferences settings = activity.getSharedPreferences("CloudDrive", MODE_PRIVATE);
-        Username = settings.getString("username",null);
-        FirstName = settings.getString("firstName",null);
-        LastName = settings.getString("lastName",null);
-        Email = settings.getString("email",null);
+    public String getUsername() {
+        return Username;
+    }
+
+    public void setUsername(String username) {
+        this.Username = username;
+    }
+
+    public String getFirstName() {
+        return FirstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.FirstName = firstName;
+    }
+
+    public String getLastName() {
+        return LastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.LastName = lastName;
+    }
+
+    public String getEmail() {
+        return Email;
+    }
+
+    public void setEmail(String email) {
+        this.Email = email;
+    }
+
+    public String getProfilePic() {
+        return ProfilePic;
+    }
+
+    public void setProfilePic(String profilePic) {
+        this.ProfilePic = profilePic;
+    }
+
+    public String getPassword() {
+        return Password;
+    }
+
+    public void setPassword(String password) {
+        this.Password = password;
+    }
+
+    public boolean isAdmin() {
+        return Admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.Admin = admin;
     }
 }
