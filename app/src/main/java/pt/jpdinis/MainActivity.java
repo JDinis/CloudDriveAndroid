@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private MainActivity mainActivity;
-    private String[] prevFiles;
 
 
     public static final int REQUEST_WRITE_STORAGE = 112;
@@ -111,7 +110,6 @@ public class MainActivity extends AppCompatActivity
                }
 
                 String[] filex = filenames.toArray(new String[0]);
-                prevFiles = filex;
                 mAdapter = new FileAdapter(filex);
                 recyclerView.setAdapter(mAdapter);
             }
@@ -187,8 +185,38 @@ public class MainActivity extends AppCompatActivity
             mAdapter = new FileAdapter(file.list());
             recyclerView.setAdapter(mAdapter);
         } else if (id == R.id.nav_online_files) {
-            mAdapter = new FileAdapter(prevFiles);
-            recyclerView.setAdapter(mAdapter);
+            Gson gson = new GsonBuilder()
+                    .setLenient()
+                    .create();
+
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(CloudDriveApi.ApiURL)
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .build();
+
+            CloudDriveApi service = retrofit.create(CloudDriveApi.class);
+            Call<JsonElement> files = service.listFiles();
+
+            files.enqueue(new Callback<JsonElement>() {
+                @Override
+                public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                    JsonArray files = response.body().getAsJsonObject().getAsJsonArray("files");
+                    ArrayList<String> filenames = new ArrayList<>();
+
+                    for(int i = 0; i<files.size();i++){
+                        filenames.add(files.get(i).getAsString());
+                    }
+
+                    String[] filex = filenames.toArray(new String[0]);
+                    mAdapter = new FileAdapter(filex);
+                    recyclerView.setAdapter(mAdapter);
+                }
+
+                @Override
+                public void onFailure(Call<JsonElement> call, Throwable t) {
+
+                }
+            });
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
