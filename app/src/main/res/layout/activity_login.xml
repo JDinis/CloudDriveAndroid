@@ -26,9 +26,14 @@
         android:layout_marginTop="100dp"
         android:layout_marginRight="30dp"
         android:alpha="0.5"
-        android:background="@android:color/white"
+        android:background="@drawable/round_textview"
+        android:gravity="center"
         android:hint="@string/promptUsername"
-        android:inputType="textAutoComplete" />
+        android:inputType="textAutoComplete"
+        android:paddingLeft="5dp"
+        android:paddingTop="5dp"
+        android:paddingRight="5dp"
+        android:paddingBottom="5dp" />
 
     <EditText
         android:id="@+id/passEditText"
@@ -36,14 +41,18 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/userEditText"
         android:layout_marginLeft="30dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:layout_marginRight="30dp"
-        android:ems="10"
-        android:inputType="textPassword"
         android:alpha="0.5"
-        android:background="@android:color/white"
-        android:hint="@string/promptPassword">
-    </EditText>
+        android:background="@drawable/round_textview"
+        android:ems="10"
+        android:gravity="center"
+        android:hint="@string/promptPassword"
+        android:inputType="textPassword"
+        android:paddingLeft="5dp"
+        android:paddingTop="5dp"
+        android:paddingRight="5dp"
+        android:paddingBottom="5dp"></EditText>
 
     <Button
         android:id="@+id/loginButton"
@@ -60,8 +69,8 @@
         android:layout_marginEnd="@dimen/loginButtonLateralMargin"
         android:layout_marginRight="@dimen/loginButtonLateralMargin"
         android:layout_marginBottom="@dimen/loginMarginTop"
-        android:alpha="0.8"
-        android:background="@color/loginButtonColor"
+        android:alpha="0.6"
+        android:background="@drawable/round_login_btn"
         android:padding="@dimen/loginBtnPadding"
         android:text="@string/login" />
 
@@ -76,7 +85,7 @@
         android:layout_alignRight="@+id/loginButton"
         android:layout_marginStart="@dimen/loginProgressLateralMargin"
         android:layout_marginLeft="@dimen/loginProgressLateralMargin"
-        android:layout_marginTop="@dimen/loginMarginTop"
+        android:layout_marginTop="15dp"
         android:layout_marginEnd="@dimen/loginProgressLateralMargin"
         android:layout_marginRight="@dimen/loginProgressLateralMargin"
         android:visibility="invisible" />

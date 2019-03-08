@@ -44,14 +44,26 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         holder.textView.setText(mDataset[position]);
         String ext = mDataset[position].substring(mDataset[position].lastIndexOf('.')+1);
 
+        holder.imageView.setBackgroundResource(R.drawable.cloudfile);
+
         if(ext.equals("txt")){
             holder.imageView.setBackgroundResource(R.drawable.document);
-        }else if(ext.equals("png")||ext.equals("jpg")||ext.equals("jpeg")||ext.equals("gif")||ext.equals("webp")||ext.equals("bmp")||ext.equals("tiff")){
+        }
+
+        if(ext.equals("png")||ext.equals("jpg")||ext.equals("jpeg")||ext.equals("gif")||ext.equals("webp")||ext.equals("bmp")||ext.equals("tiff")){
             holder.imageView.setBackgroundResource(R.drawable.image);
-        }else if(ext.equals("rar")||ext.equals("7z")||ext.equals("zip")||ext.equals("tar")||ext.equals("gz")||ext.equals("tgz")){
-            holder.imageView.setBackgroundResource(R.drawable.image);
-        }else {
-            holder.imageView.setBackgroundResource(R.drawable.cloudfile);
+        }
+
+        if(ext.equals("rar")||ext.equals("7z")||ext.equals("zip")||ext.equals("tar")||ext.equals("gz")||ext.equals("tgz")){
+            holder.imageView.setBackgroundResource(R.drawable.archive);
+        }
+
+        if(ext.equals("pdf")){
+            holder.imageView.setBackgroundResource(R.drawable.pdf);
+        }
+
+        if(ext.equals("exe")){
+            holder.imageView.setBackgroundResource(R.drawable.exe);
         }
     }
 

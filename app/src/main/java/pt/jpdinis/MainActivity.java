@@ -53,6 +53,8 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private MainActivity mainActivity;
+    private String[] prevFiles;
+
 
     public static final int REQUEST_WRITE_STORAGE = 112;
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -109,6 +111,7 @@ public class MainActivity extends AppCompatActivity
                }
 
                 String[] filex = filenames.toArray(new String[0]);
+                prevFiles = filex;
                 mAdapter = new FileAdapter(filex);
                 recyclerView.setAdapter(mAdapter);
             }
@@ -176,9 +179,16 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_local_files) {
-            // Handle the camera action
-        } else if (id == R.id.nav_online_files) {
+            verifyStoragePermissions(mainActivity);
+            requestPermission(mainActivity);
 
+            File file = new File(getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive");
+
+            mAdapter = new FileAdapter(file.list());
+            recyclerView.setAdapter(mAdapter);
+        } else if (id == R.id.nav_online_files) {
+            mAdapter = new FileAdapter(prevFiles);
+            recyclerView.setAdapter(mAdapter);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

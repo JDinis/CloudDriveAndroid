@@ -6,11 +6,11 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_online_files"
-            android:icon="@android:drawable/stat_notify_sdcard"
+            android:icon="@drawable/download"
             android:title="@string/online_files" />
         <item
             android:id="@+id/nav_local_files"
-            android:icon="@android:drawable/stat_notify_sdcard"
+            android:icon="@drawable/upload"
             android:title="@string/local_files" />
     </group>
 

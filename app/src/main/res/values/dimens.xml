@@ -2,7 +2,7 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activityHorizontalMargin">16dp</dimen>
     <dimen name="activityVerticalMargin">16dp</dimen>
-    <dimen name="loginMarginTop">15dp</dimen>
+    <dimen name="loginMarginTop">25dp</dimen>
     <dimen name="loginButtonLateralMargin">80dp</dimen>
     <dimen name="loginProgressLateralMargin">0dp</dimen>
     <!-- Default screen margins, per the Android Design guidelines. -->

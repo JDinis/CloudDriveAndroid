@@ -21,4 +21,7 @@
     <string name="local_files">Local Files</string>
     <string name="online_files">Online Files</string>
     <string name="icon">Icon</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
