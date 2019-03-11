@@ -7,7 +7,7 @@
     android:clickable="true"
     android:orientation="horizontal"
     android:padding="16dp"
-    android:onClick="download"
+    android:longClickable="true"
     android:layout_weight="1"
     android:background="@android:drawable/list_selector_background"
     android:focusable="true">

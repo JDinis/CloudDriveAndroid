@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,11 +51,11 @@ import static android.os.Environment.getExternalStorageDirectory;
 
 public class MainActivity extends AppCompatActivity
        implements NavigationView.OnNavigationItemSelectedListener {
-    private RecyclerView recyclerView;
+    private static RecyclerView recyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
-    private MainActivity mainActivity;
-    boolean download = true;
+    private static MainActivity mainActivity;
+    static boolean download = true;
 
 
     public static final int REQUEST_WRITE_STORAGE = 112;
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+
         recyclerView = findViewById(R.id.fileList);
         recyclerView.setHasFixedSize(false);
 
@@ -88,6 +90,7 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setLayoutManager(layoutManager);
 
         mainActivity=this;
+        registerForContextMenu(recyclerView);
 
         Call<JsonElement> files =  CloudDriveApi.service.listFiles();
 
@@ -111,6 +114,30 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+    }
+
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        int position = -1;
+        try {
+            position = ((FileAdapter)recyclerView.getAdapter()).getPosition();
+        } catch (Exception e) {
+            Log.d("[MyViewHolder]", e.getLocalizedMessage(), e);
+            return super.onContextItemSelected(item);
+        }
+        switch (item.getItemId()) {
+            case R.id.downloadMenuOption:
+                download(recyclerView.getChildAt(position));
+                break;
+            case R.id.uploadMenuOption:
+                upload(recyclerView.getChildAt(position));
+                break;
+            case R.id.deleteMenuOption:
+                deleteFile(recyclerView.getChildAt(position));
+                break;
+        }
+        return super.onContextItemSelected(item);
     }
 
     @Override
@@ -303,7 +330,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void requestPermission(Activity context) {
+    private static void requestPermission(Activity context) {
         boolean hasPermission = (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
         if (!hasPermission) {
             ActivityCompat.requestPermissions(context,
@@ -312,7 +339,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private boolean[] checkExternalMedia(){
+    private static boolean[] checkExternalMedia(){
         String state = Environment.getExternalStorageState();
 
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -341,7 +368,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private Boolean writeResponseBodyToDisk(ResponseBody body,String filename) {
+    private static Boolean writeResponseBodyToDisk(ResponseBody body, String filename) {
         WriteToDiskTask asyncTask = new WriteToDiskTask();
         asyncTask.execute(new WriteToDiskParams(body,filename));
 
@@ -356,8 +383,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void download(View view) {
-        if(download) {
+    public static void download(View view) {
             final String filename = ((TextView) view.findViewById(R.id.textView)).getText().toString();
             Call<ResponseBody> files =  CloudDriveApi.service.downloadFile(filename);
 
@@ -365,24 +391,25 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     if (response.isSuccessful()) {
-                        Toast.makeText(mainActivity, getString(R.string.fileExistsServer), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, mainActivity.getString(R.string.fileExistsServer), Toast.LENGTH_SHORT).show();
 
                         boolean writtenToDisk = writeResponseBodyToDisk(response.body(), filename);
 
-                        Toast.makeText(mainActivity, getString(R.string.downloadSuccess) + writtenToDisk, Toast.LENGTH_LONG).show();
-                        ((FileAdapter)recyclerView.getAdapter()).addItem(filename);
+                        Toast.makeText(mainActivity, mainActivity.getString(R.string.downloadSuccess) + writtenToDisk, Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(mainActivity, getString(R.string.connectionFailed), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, mainActivity.getString(R.string.connectionFailed), Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Toast.makeText(mainActivity, getString(R.string.downloadFailed) + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(mainActivity, mainActivity.getString(R.string.downloadFailed) + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
-        }else{
-            final String filename = getExternalStorageDirectory().getAbsolutePath() + File.separator +  getString(R.string.appName)+File.separator+((TextView) view.findViewById(R.id.textView)).getText().toString();
+    }
+
+    public static void upload(View view) {
+            final String filename = getExternalStorageDirectory().getAbsolutePath() + File.separator +  mainActivity.getString(R.string.appName)+File.separator+((TextView) view.findViewById(R.id.textView)).getText().toString();
             File dir = new File(filename);
             RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)),dir);
             MultipartBody.Part part = MultipartBody.Part.createFormData(
@@ -395,18 +422,47 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                     if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
-                        Toast.makeText(mainActivity, getString(R.string.uploadSuccess), Toast.LENGTH_SHORT).show();
-                        ((FileAdapter)recyclerView.getAdapter()).addItem(filename);
+                        Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadSuccess), Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(mainActivity, getString(R.string.uploadFailed), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadFailed), Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<JsonElement> call, Throwable t) {
-                    Toast.makeText(mainActivity, getString(R.string.uploadFailed)+ ": " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadFailed)+ ": " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
+    }
+
+    public void deleteFile(View view){
+        final String filename = ((TextView) view.findViewById(R.id.textView)).getText().toString();
+        if(download){
+            Call<JsonElement> files =  CloudDriveApi.service.deleteFile(filename);
+            files.enqueue(new Callback<JsonElement>() {
+                @Override
+                public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                    if(response.body().getAsJsonObject().get("success").getAsBoolean()){
+                        Toast.makeText(mainActivity,getString(R.string.fileDeleteSuccess),Toast.LENGTH_LONG).show();
+                        ((FileAdapter)recyclerView.getAdapter()).removeItem(filename);
+                    }else{
+                        Toast.makeText(mainActivity, mainActivity.getString(R.string.fileDeleteFailed), Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JsonElement> call, Throwable t) {
+                    Toast.makeText(mainActivity, mainActivity.getString(R.string.fileDeleteFailed)+ ": " + t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        }else {
+            File dir = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator +  mainActivity.getString(R.string.appName)+File.separator+filename);
+            if(dir.delete()){
+                Toast.makeText(mainActivity,getString(R.string.fileDeleteSuccess),Toast.LENGTH_LONG).show();
+                ((FileAdapter)recyclerView.getAdapter()).removeItem(filename);
+            }else {
+                Toast.makeText(mainActivity,getString(R.string.fileDeleteFailed),Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -435,7 +491,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private class WriteToDiskTask extends AsyncTask<WriteToDiskParams,Void,Boolean>{
+    private static class WriteToDiskTask extends AsyncTask<WriteToDiskParams,Void,Boolean>{
         @Override
         protected Boolean doInBackground(WriteToDiskParams... params) {
             verifyStoragePermissions(mainActivity);
@@ -447,12 +503,12 @@ public class MainActivity extends AppCompatActivity
 
             try {
                 // todo change the file location/name according to your needs
-                File dir = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + getString(R.string.appName));
+                File dir = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + mainActivity.getString(R.string.appName));
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
 
-                File file = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + getString(R.string.appName) + File.separator + params[0].filename);
+                File file = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + mainActivity.getString(R.string.appName) + File.separator + params[0].filename);
                 if (!file.exists()) {
                     file.createNewFile();
                 }

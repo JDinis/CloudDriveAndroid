@@ -20,4 +20,5 @@
     <string name="uploadSuccess">Ficheiro Enviado</string>
     <string name="uploadFailed">Envio de Ficheiro falhado</string>
     <string name="searchFile">Procurar Ficheiro a Enviar</string>
+    <string name="upload">Enviar</string>
 </resources>

@@ -12,6 +12,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.DELETE;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -62,6 +63,9 @@ public interface CloudDriveApi {
     @Multipart
     @POST("/files/upload")
     Call<JsonElement> uploadFile(@Part MultipartBody.Part files);
+
+    @DELETE("/files/{filename}")
+    Call<JsonElement> deleteFile(@Path("filename") String filename);
 }
 
 

@@ -28,4 +28,9 @@
     <string name="uploadSuccess">File Uploaded</string>
     <string name="uploadFailed">Upload failed</string>
     <string name="searchFile">Search File to Upload</string>
+    <string name="download" translatable="false">Download</string>
+    <string name="upload">Upload</string>
+    <string name="delete">Delete</string>
+    <string name="fileDeleteSuccess">File deleted successfully</string>
+    <string name="fileDeleteFailed">Failed to delete file</string>
 </resources>
