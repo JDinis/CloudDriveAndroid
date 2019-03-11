@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appName">CloudDrive</string>
+    <string name="logout">Sair</string>
+    <string name="local_files">Ficheiros Locais</string>
+    <string name="online_files">Ficheiros Online</string>
+    <string name="action_settings">Opções</string>
+    <string name="promptUsername">Nome do Utilizador</string>
+    <string name="promptPassword">Palavra-Chave (opcional)</string>
+    <string name="actionSignin">Sign in ou registar</string>
+    <string name="errorInvalidUsername">O nome do utilizador é invalido</string>
+    <string name="errorIncorrectPassword">A palavra-chave está incorrecta</string>
+    <string name="errorFieldRequired">O é necessario preencher o campo</string>
+    <string name="usernameSettings">Nome do Utilizador</string>
+    <string name="logoutFailed" translatable="false">Sair da conta falhou</string>
+    <string name="fileExistsServer">O servidor foi contactado e possui o ficheiro</string>
+    <string name="downloadSuccess">Download bem sucedido:</string>
+    <string name="connectionFailed">Falha ao contactar o servidor</string>
+    <string name="downloadFailed">Download falhou:</string>
+    <string name="uploadSuccess">Ficheiro Enviado</string>
+    <string name="uploadFailed">Envio de Ficheiro falhado</string>
+</resources>
