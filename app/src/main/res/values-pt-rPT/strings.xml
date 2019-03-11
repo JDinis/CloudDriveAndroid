@@ -21,4 +21,7 @@
     <string name="uploadFailed">Envio de Ficheiro falhado</string>
     <string name="searchFile">Procurar Ficheiro a Enviar</string>
     <string name="upload">Enviar</string>
+    <string name="delete">Apagar</string>
+    <string name="fileDeleteSuccess">Ficheiro apagado com sucesso</string>
+    <string name="fileDeleteFailed">Falha ao apagar ficheiro</string>
 </resources>

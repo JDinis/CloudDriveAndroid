@@ -20,7 +20,7 @@
     <string name="local_files">Local Files</string>
     <string name="online_files">Online Files</string>
     <string name="icon" translatable="false">Icon</string>
-    <string name="logoutFailed">Logout Failed</string>
+    <string name="logoutFailed" translatable="true">Logout Failed</string>
     <string name="fileExistsServer">Server contacted and has file</string>
     <string name="downloadSuccess">Download successful:</string>
     <string name="connectionFailed">Server contact failed</string>
