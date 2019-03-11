@@ -9,6 +9,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -24,23 +27,16 @@ public class LauncherActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(CloudDriveApi.ApiURL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
+        setContentView(R.layout.activity_launcher);
 
         activity = this;
 
-        CloudDriveApi service = retrofit.create(CloudDriveApi.class);
         User user = new CloudPreferences(this).getUser();
         Intent activityIntent = null;
 
         if(user.getUsername()!=null) {
-            Call<JsonElement> isLogged = service.isLogged(user.Username);
+            Call<JsonElement> isLogged = CloudDriveApi.service.isLogged(user.Username);
 
             isLogged.enqueue(new Callback<JsonElement>() {
                 @Override
@@ -61,6 +57,7 @@ public class LauncherActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(Call<JsonElement> call, Throwable t) {
                     Log.e("[JSON]", t.getMessage());
+                    recreate();
                 }
             });
         }else{

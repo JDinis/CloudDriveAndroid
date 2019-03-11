@@ -70,6 +70,10 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return mDataset.length;
+        if(mDataset==null){
+            return  0;
+        }else {
+            return mDataset.length;
+        }
     }
 }

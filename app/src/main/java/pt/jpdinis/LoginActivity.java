@@ -61,17 +61,6 @@ public class LoginActivity extends AppCompatActivity {
         // Set up the login form.
         mUserView = (EditText) findViewById(R.id.userEditText);
 
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        retrofit = new Retrofit.Builder()
-                .baseUrl(CloudDriveApi.ApiURL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-
-
         mPasswordView = (EditText) findViewById(R.id.passEditText);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -111,9 +100,7 @@ public class LoginActivity extends AppCompatActivity {
         String Username = mUserView.getText().toString();
         String Password = mPasswordView.getText().toString();
 
-        service = retrofit.create(CloudDriveApi.class);
-
-        Call<JsonElement> login = service.login(Username,Password);
+        Call<JsonElement> login =  CloudDriveApi.service.login(Username,Password);
 
         login.enqueue(new Callback<JsonElement>() {
             @Override

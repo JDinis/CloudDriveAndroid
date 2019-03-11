@@ -3,8 +3,11 @@ package pt.jpdinis;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -31,13 +34,18 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -53,6 +61,7 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private MainActivity mainActivity;
+    boolean download = true;
 
 
     public static final int REQUEST_WRITE_STORAGE = 112;
@@ -87,17 +96,7 @@ public class MainActivity extends AppCompatActivity
 
         mainActivity=this;
 
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(CloudDriveApi.ApiURL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        CloudDriveApi service = retrofit.create(CloudDriveApi.class);
-        Call<JsonElement> files = service.listFiles();
+        Call<JsonElement> files =  CloudDriveApi.service.listFiles();
 
         files.enqueue(new Callback<JsonElement>() {
             @Override
@@ -184,18 +183,9 @@ public class MainActivity extends AppCompatActivity
 
             mAdapter = new FileAdapter(file.list());
             recyclerView.setAdapter(mAdapter);
+            download=false;
         } else if (id == R.id.nav_online_files) {
-            Gson gson = new GsonBuilder()
-                    .setLenient()
-                    .create();
-
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(CloudDriveApi.ApiURL)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .build();
-
-            CloudDriveApi service = retrofit.create(CloudDriveApi.class);
-            Call<JsonElement> files = service.listFiles();
+            Call<JsonElement> files =  CloudDriveApi.service.listFiles();
 
             files.enqueue(new Callback<JsonElement>() {
                 @Override
@@ -210,6 +200,7 @@ public class MainActivity extends AppCompatActivity
                     String[] filex = filenames.toArray(new String[0]);
                     mAdapter = new FileAdapter(filex);
                     recyclerView.setAdapter(mAdapter);
+                    download=true;
                 }
 
                 @Override
@@ -264,92 +255,134 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private boolean writeResponseBodyToDisk(ResponseBody body,String filename) {
-        verifyStoragePermissions(mainActivity);
-        requestPermission(mainActivity);
-
-        if(!checkExternalMedia()[0] && !checkExternalMedia()[1]){
-            return false;
-        }
+    private Boolean writeResponseBodyToDisk(ResponseBody body,String filename) {
+        WriteToDiskTask asyncTask = new WriteToDiskTask();
+        asyncTask.execute(new WriteToDiskParams(body,filename));
 
         try {
-            // todo change the file location/name according to your needs
-            File dir = new File(getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive");
-            if(!dir.exists()) {
-                dir.mkdirs();
-            }
-
-            File file = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + "CloudDrive" + File.separator + filename);
-            if(!file.exists()){
-                file.createNewFile();
-            }
-
-            InputStream inputStream = null;
-            OutputStream outputStream = null;
-
-            try {
-                byte[] fileReader = new byte[1024];
-
-                inputStream = body.byteStream();
-                outputStream = new FileOutputStream(file);
-                int read =0;
-
-                while ((read = inputStream.read(fileReader))!=-1) {
-                    outputStream.write(fileReader, 0, read);
-                }
-
-                outputStream.flush();
-
-                return true;
-            } catch (IOException e) {
-                return false;
-            } finally {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            }
-        } catch (IOException e) {
+            return asyncTask.get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
             return false;
         }
     }
 
     public void download(View view) {
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
+        if(download) {
+            final String filename = ((TextView) view.findViewById(R.id.textView)).getText().toString();
+            Call<ResponseBody> files =  CloudDriveApi.service.downloadFile(filename);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(CloudDriveApi.ApiURL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
+            files.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(mainActivity, "Server contacted and has file", Toast.LENGTH_SHORT);
 
-        CloudDriveApi service = retrofit.create(CloudDriveApi.class);
-        Call<ResponseBody> files = service.downloadFile(((TextView)view.findViewById(R.id.textView)).getText().toString());
-        final String filename = ((TextView)view.findViewById(R.id.textView)).getText().toString();
+                        boolean writtenToDisk = writeResponseBodyToDisk(response.body(), filename);
 
-        files.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(mainActivity, "Server contacted and has file", Toast.LENGTH_SHORT);
-
-                    boolean writtenToDisk = writeResponseBodyToDisk(response.body(),filename);
-
-                    Toast.makeText(mainActivity, "Download successful? " + writtenToDisk, Toast.LENGTH_LONG);
-                }else{
-                    Toast.makeText(mainActivity, "Server contact failed",Toast.LENGTH_SHORT);
+                        Toast.makeText(mainActivity, "Download successful? " + writtenToDisk, Toast.LENGTH_LONG);
+                    } else {
+                        Toast.makeText(mainActivity, "Server contact failed", Toast.LENGTH_SHORT);
+                    }
                 }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    Toast.makeText(mainActivity, "Download failed: " + t.getMessage(), Toast.LENGTH_LONG);
+                }
+            });
+        }else{
+            String filename = getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive"+((TextView) view.findViewById(R.id.textView)).getText().toString();
+            Uri fileUri = Uri.parse(filename);
+            File dir = new File(filename);
+            RequestBody file = RequestBody.create(MediaType.parse(getContentResolver().getType(fileUri)),dir);
+            Call<JsonElement> files =  CloudDriveApi.service.uploadFile(file);
+
+            files.enqueue(new Callback<JsonElement>() {
+                @Override
+                public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                    if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
+                        Toast.makeText(mainActivity, "File Uploaded", Toast.LENGTH_SHORT);
+                    } else {
+                        Toast.makeText(mainActivity, "Upload failed", Toast.LENGTH_SHORT);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JsonElement> call, Throwable t) {
+                    Toast.makeText(mainActivity, "Upload failed: " + t.getMessage(), Toast.LENGTH_LONG);
+                }
+            });
+        }
+    }
+
+    private static class WriteToDiskParams {
+        ResponseBody body;
+        String filename;
+
+        WriteToDiskParams(ResponseBody body,String filename) {
+            this.body = body;
+            this.filename = filename;
+        }
+    }
+
+
+    private class WriteToDiskTask extends AsyncTask<WriteToDiskParams,Void,Boolean>{
+        @Override
+        protected Boolean doInBackground(WriteToDiskParams... params) {
+            verifyStoragePermissions(mainActivity);
+            requestPermission(mainActivity);
+
+            if (!checkExternalMedia()[0] && !checkExternalMedia()[1]) {
+                return false;
             }
 
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Toast.makeText(mainActivity, "Download failed: "+t.getMessage(),Toast.LENGTH_LONG);
-            }
-        });
+            try {
+                // todo change the file location/name according to your needs
+                File dir = new File(getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive");
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
 
+                File file = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + "CloudDrive" + File.separator + params[0].filename);
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+
+                InputStream inputStream = null;
+                OutputStream outputStream = null;
+
+                try {
+                    byte[] fileReader = new byte[1024];
+
+                    inputStream = params[0].body.byteStream();
+                    outputStream = new FileOutputStream(file);
+                    int read = 0;
+
+                    while ((read = inputStream.read(fileReader)) != -1) {
+                        outputStream.write(fileReader, 0, read);
+                    }
+
+                    outputStream.flush();
+
+                    return true;
+                } catch (IOException e) {
+                    return false;
+                } finally {
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+
+                    if (outputStream != null) {
+                        outputStream.close();
+                    }
+                }
+            } catch (IOException e) {
+                return false;
+            }
+        }
     }
 }
