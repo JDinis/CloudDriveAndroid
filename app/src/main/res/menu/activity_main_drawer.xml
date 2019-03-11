@@ -12,6 +12,10 @@
             android:id="@+id/nav_local_files"
             android:icon="@drawable/upload"
             android:title="@string/local_files" />
+        <item
+            android:id="@+id/nav_search_files"
+            android:icon="@drawable/upload"
+            android:title="@string/searchFile" />
     </group>
 
 </menu>

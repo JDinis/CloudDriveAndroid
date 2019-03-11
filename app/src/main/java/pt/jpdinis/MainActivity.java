@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -29,6 +30,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -171,47 +173,134 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_local_files) {
-            verifyStoragePermissions(mainActivity);
-            requestPermission(mainActivity);
+        switch (id) {
+            case R.id.nav_local_files:
+                verifyStoragePermissions(mainActivity);
+                requestPermission(mainActivity);
 
-            File file = new File(getExternalStorageDirectory().getAbsolutePath() +File.separator+ getString(R.string.appName));
+                File file = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + getString(R.string.appName));
 
-            mAdapter = new FileAdapter(file.list());
-            recyclerView.setAdapter(mAdapter);
-            download=false;
-        } else if (id == R.id.nav_online_files) {
-            download=true;
-            Call<JsonElement> files =  CloudDriveApi.service.listFiles();
+                mAdapter = new FileAdapter(file.list());
+                recyclerView.setAdapter(mAdapter);
+                download = false;
+                break;
+            case R.id.nav_online_files:
+                download = true;
+                Call<JsonElement> files = CloudDriveApi.service.listFiles();
 
-            files.enqueue(new Callback<JsonElement>() {
-                @Override
-                public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
-                    JsonArray files = response.body().getAsJsonObject().getAsJsonArray("files");
+                files.enqueue(new Callback<JsonElement>() {
+                    @Override
+                    public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                        JsonArray files = response.body().getAsJsonObject().getAsJsonArray("files");
 
-                    if (files != null) {
-                        ArrayList<String> filenames = new ArrayList<>();
+                        if (files != null) {
+                            ArrayList<String> filenames = new ArrayList<>();
 
-                        for (int i = 0; i < files.size(); i++) {
-                            filenames.add(files.get(i).getAsString());
+                            for (int i = 0; i < files.size(); i++) {
+                                filenames.add(files.get(i).getAsString());
+                            }
+
+                            String[] filex = filenames.toArray(new String[0]);
+                            mAdapter = new FileAdapter(filex);
+                            recyclerView.setAdapter(mAdapter);
                         }
-
-                        String[] filex = filenames.toArray(new String[0]);
-                        mAdapter = new FileAdapter(filex);
-                        recyclerView.setAdapter(mAdapter);
                     }
-                }
 
-                @Override
-                public void onFailure(Call<JsonElement> call, Throwable t) {
+                    @Override
+                    public void onFailure(Call<JsonElement> call, Throwable t) {
 
-                }
-            });
+                    }
+                });
+                break;
+            case R.id.nav_search_files:
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+                intent.setType("*/*");
+
+                startActivityForResult(intent, 42);
+                break;
+            default:
+                    break;
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public File getFileFromContentUri(InputStream input, String filename){
+        File file = new File(getCacheDir(), filename);
+        try {
+            OutputStream output = new FileOutputStream(file);
+            try {
+                byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                int read;
+
+                while ((read = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                }
+
+                output.flush();
+            } finally {
+                input.close();
+                output.close();
+            }
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return file;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode,
+                                 Intent resultData) {
+        if (requestCode == 42 && resultCode == Activity.RESULT_OK) {
+            Uri uri = null;
+            File dir = null;
+
+            if (resultData != null) {
+                uri = resultData.getData();
+
+                if(uri.getScheme().equals("content")){
+                    try {
+                        dir = getFileFromContentUri(getContentResolver().openInputStream(uri),new File(uri.getPath()).getName());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }else if(uri.getScheme().equals("file")){
+                    dir = new File(uri.getPath());
+                }
+
+                final String filename = dir.getName();
+                RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)),dir);
+                MultipartBody.Part part = MultipartBody.Part.createFormData(
+                        "files",
+                        dir.getName(),
+                        file);
+                Call<JsonElement> files =  CloudDriveApi.service.uploadFile(part);
+
+                files.enqueue(new Callback<JsonElement>() {
+                    @Override
+                    public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                        if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
+                            Toast.makeText(mainActivity, getString(R.string.uploadSuccess), Toast.LENGTH_SHORT).show();
+                            ((FileAdapter)recyclerView.getAdapter()).addItem(filename);
+                        } else {
+                            Toast.makeText(mainActivity, getString(R.string.uploadFailed), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonElement> call, Throwable t) {
+                        Toast.makeText(mainActivity, getString(R.string.uploadFailed)+ ": " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        }
     }
 
     private void requestPermission(Activity context) {
@@ -281,6 +370,7 @@ public class MainActivity extends AppCompatActivity
                         boolean writtenToDisk = writeResponseBodyToDisk(response.body(), filename);
 
                         Toast.makeText(mainActivity, getString(R.string.downloadSuccess) + writtenToDisk, Toast.LENGTH_LONG).show();
+                        ((FileAdapter)recyclerView.getAdapter()).addItem(filename);
                     } else {
                         Toast.makeText(mainActivity, getString(R.string.connectionFailed), Toast.LENGTH_SHORT).show();
                     }
@@ -292,7 +382,7 @@ public class MainActivity extends AppCompatActivity
                 }
             });
         }else{
-            String filename = getExternalStorageDirectory().getAbsolutePath() + File.separator +  getString(R.string.appName)+File.separator+((TextView) view.findViewById(R.id.textView)).getText().toString();
+            final String filename = getExternalStorageDirectory().getAbsolutePath() + File.separator +  getString(R.string.appName)+File.separator+((TextView) view.findViewById(R.id.textView)).getText().toString();
             File dir = new File(filename);
             RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)),dir);
             MultipartBody.Part part = MultipartBody.Part.createFormData(
@@ -306,6 +396,7 @@ public class MainActivity extends AppCompatActivity
                 public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                     if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
                         Toast.makeText(mainActivity, getString(R.string.uploadSuccess), Toast.LENGTH_SHORT).show();
+                        ((FileAdapter)recyclerView.getAdapter()).addItem(filename);
                     } else {
                         Toast.makeText(mainActivity, getString(R.string.uploadFailed), Toast.LENGTH_SHORT).show();
                     }

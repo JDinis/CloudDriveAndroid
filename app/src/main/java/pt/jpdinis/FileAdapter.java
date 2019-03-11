@@ -1,13 +1,14 @@
 package pt.jpdinis;
 
-import android.content.res.Resources;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> {
     private String[] mDataset;
@@ -65,6 +66,22 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         if(ext.equals("exe")){
             holder.imageView.setBackgroundResource(R.drawable.exe);
         }
+    }
+
+    public void addItem(String item){
+        ArrayList<String> dataset = new ArrayList<>();
+        dataset.addAll(Arrays.asList(mDataset));
+        dataset.add(item);
+        this.mDataset = dataset.toArray(new String[0]);
+        this.notifyDataSetChanged();
+    }
+
+    public void removeItem(String item){
+        ArrayList<String> dataset = new ArrayList<>();
+        dataset.addAll(Arrays.asList(mDataset));
+        dataset.remove(dataset.indexOf(item));
+        this.mDataset = dataset.toArray(new String[0]);
+        this.notifyDataSetChanged();
     }
 
     // Return the size of your dataset (invoked by the layout manager)
