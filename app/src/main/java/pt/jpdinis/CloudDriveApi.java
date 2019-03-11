@@ -48,7 +48,6 @@ public interface CloudDriveApi {
     @POST("islogged")
     Call<JsonElement> isLogged(@Field("username") String username);
 
-    @FormUrlEncoded
     @POST("smartlogout")
     Call<JsonElement> logout();
 
