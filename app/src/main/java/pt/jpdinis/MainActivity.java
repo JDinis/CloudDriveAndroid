@@ -3,6 +3,7 @@ package pt.jpdinis;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.MimeTypeMap;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +47,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -131,7 +134,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void logout(View view){
-        JSONObject object = new JSONObject();
         /*CloudDriveApi.PostJSONData postJSONRunnable = new CloudDriveApi.PostJSONData("https://clouddriveserver.azurewebsites.net/smartlogout",object);
         Thread t = new Thread(postJSONRunnable);
         t.start();
@@ -185,22 +187,25 @@ public class MainActivity extends AppCompatActivity
             recyclerView.setAdapter(mAdapter);
             download=false;
         } else if (id == R.id.nav_online_files) {
+            download=true;
             Call<JsonElement> files =  CloudDriveApi.service.listFiles();
 
             files.enqueue(new Callback<JsonElement>() {
                 @Override
                 public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                     JsonArray files = response.body().getAsJsonObject().getAsJsonArray("files");
-                    ArrayList<String> filenames = new ArrayList<>();
 
-                    for(int i = 0; i<files.size();i++){
-                        filenames.add(files.get(i).getAsString());
+                    if (files != null) {
+                        ArrayList<String> filenames = new ArrayList<>();
+
+                        for (int i = 0; i < files.size(); i++) {
+                            filenames.add(files.get(i).getAsString());
+                        }
+
+                        String[] filex = filenames.toArray(new String[0]);
+                        mAdapter = new FileAdapter(filex);
+                        recyclerView.setAdapter(mAdapter);
                     }
-
-                    String[] filex = filenames.toArray(new String[0]);
-                    mAdapter = new FileAdapter(filex);
-                    recyclerView.setAdapter(mAdapter);
-                    download=true;
                 }
 
                 @Override
@@ -279,44 +284,56 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     if (response.isSuccessful()) {
-                        Toast.makeText(mainActivity, "Server contacted and has file", Toast.LENGTH_SHORT);
+                        Toast.makeText(mainActivity, "Server contacted and has file", Toast.LENGTH_SHORT).show();
 
                         boolean writtenToDisk = writeResponseBodyToDisk(response.body(), filename);
 
-                        Toast.makeText(mainActivity, "Download successful? " + writtenToDisk, Toast.LENGTH_LONG);
+                        Toast.makeText(mainActivity, "Download successful? " + writtenToDisk, Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(mainActivity, "Server contact failed", Toast.LENGTH_SHORT);
+                        Toast.makeText(mainActivity, "Server contact failed", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Toast.makeText(mainActivity, "Download failed: " + t.getMessage(), Toast.LENGTH_LONG);
+                    Toast.makeText(mainActivity, "Download failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
         }else{
-            String filename = getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive"+((TextView) view.findViewById(R.id.textView)).getText().toString();
-            Uri fileUri = Uri.parse(filename);
+            String filename = getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive/"+((TextView) view.findViewById(R.id.textView)).getText().toString();
             File dir = new File(filename);
-            RequestBody file = RequestBody.create(MediaType.parse(getContentResolver().getType(fileUri)),dir);
-            Call<JsonElement> files =  CloudDriveApi.service.uploadFile(file);
+            RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)),dir);
+            MultipartBody.Part part = MultipartBody.Part.createFormData(
+                    "files",
+                    dir.getName(),
+                    file);
+            Call<JsonElement> files =  CloudDriveApi.service.uploadFile(part);
 
             files.enqueue(new Callback<JsonElement>() {
                 @Override
                 public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                     if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
-                        Toast.makeText(mainActivity, "File Uploaded", Toast.LENGTH_SHORT);
+                        Toast.makeText(mainActivity, "File Uploaded", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(mainActivity, "Upload failed", Toast.LENGTH_SHORT);
+                        Toast.makeText(mainActivity, "Upload failed", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<JsonElement> call, Throwable t) {
-                    Toast.makeText(mainActivity, "Upload failed: " + t.getMessage(), Toast.LENGTH_LONG);
+                    Toast.makeText(mainActivity, "Upload failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
         }
+    }
+
+    public static String getMimeType(String url) {
+        String type = null;
+        String extension = url.substring(url.lastIndexOf(".")+1);
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        }
+        return type;
     }
 
     private static class WriteToDiskParams {

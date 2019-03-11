@@ -24,6 +24,7 @@ import java.nio.Buffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -42,7 +43,8 @@ import retrofit2.http.Streaming;
 import retrofit2.http.Url;
 
 public interface CloudDriveApi {
-    static String ApiURL = "https://clouddriveserver.azurewebsites.net/";
+    static String ApiURL = "https://clouddriveserver.azurewebsites.net:443/";
+    static String LocalApiURL = "http://192.168.1.66:3001/";
 
     Gson gson = new GsonBuilder()
             .setLenient()
@@ -54,7 +56,7 @@ public interface CloudDriveApi {
             .build();
 
     Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(CloudDriveApi.ApiURL)
+            .baseUrl(CloudDriveApi.LocalApiURL)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build();
 
@@ -68,6 +70,10 @@ public interface CloudDriveApi {
     Call<JsonElement> isLogged(@Field("username") String username);
 
     @FormUrlEncoded
+    @POST("smartlogout")
+    Call<JsonElement> logout();
+
+    @FormUrlEncoded
     @POST("login")
     Call<JsonElement> login(@Field("username") String username,@Field("password") String password);
 
@@ -77,7 +83,7 @@ public interface CloudDriveApi {
 
     @Multipart
     @POST("/files/upload")
-    Call<JsonElement> uploadFile(@Part("files") RequestBody file);
+    Call<JsonElement> uploadFile(@Part MultipartBody.Part files);
 }
 
 
