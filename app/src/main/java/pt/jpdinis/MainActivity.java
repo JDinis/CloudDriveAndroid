@@ -325,6 +325,11 @@ public class MainActivity extends AppCompatActivity
         if (extension != null) {
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         }
+
+        if(type==null){
+            type="application/octet-stream";
+        }
+
         return type;
     }
 
