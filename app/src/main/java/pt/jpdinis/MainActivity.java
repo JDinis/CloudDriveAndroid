@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity
         Uri fileUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         File dir = null;
 
-        if (fileUri == null || !new File(fileUri.getPath()).getName().contains("."))
+        if (fileUri == null || !new File(fileUri.getPath()).getName().contains(".") && MediaType.parse(intent.getType())==null)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 mainActivity.finishAffinity();
                 System.exit(0);
@@ -195,12 +195,21 @@ public class MainActivity extends AppCompatActivity
             dir = new File(fileUri.getPath());
         }
 
+        MediaType mediaType = MediaType.parse("text/plain");
 
-        final String filename = dir.getName();
-        RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)), dir);
+        if(MediaType.parse(intent.getType())!=null){
+            mediaType=MediaType.parse(intent.getType());
+        }else{
+            String fn = dir.getName();
+            mediaType = MediaType.parse(getMimeType(fn));
+        }
+
+        final String filename = dir.getName().contains(".") ? dir.getName() :  dir.getName()+"."+mediaType.subtype();
+
+        RequestBody file = RequestBody.create(mediaType, dir);
         MultipartBody.Part part = MultipartBody.Part.createFormData(
                 "files",
-                dir.getName(),
+                filename,
                 file);
         Call<JsonElement> files = CloudDriveApi.service.uploadFile(part);
 
@@ -246,24 +255,28 @@ public class MainActivity extends AppCompatActivity
         for (Uri fileUri :
                 fileUris) {
             File dir = null;
-            if (fileUri != null && new File(fileUri.getPath()).getName().contains(".")) {
-                if (fileUri.getScheme().equals("content")) {
-                    try {
-                        dir = mainActivity.getFileFromContentUri(mainActivity.getContentResolver().openInputStream(fileUri), new File(fileUri.getPath()).getName());
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                if (fileUri != null && new File(fileUri.getPath()).getName().contains(".") || intent.getClipData().getDescription().getMimeTypeCount()>0) {
+                    if (fileUri.getScheme().equals("content")) {
+                        try {
+                            dir = mainActivity.getFileFromContentUri(mainActivity.getContentResolver().openInputStream(fileUri), new File(fileUri.getPath()).getName());
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (fileUri.getScheme().equals("file")) {
+                        dir = new File(fileUri.getPath());
                     }
-                } else if (fileUri.getScheme().equals("file")) {
-                    dir = new File(fileUri.getPath());
-                }
 
-                final String filename = dir.getName();
-                RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)), dir);
-                MultipartBody.Part part = MultipartBody.Part.createFormData(
-                        "files",
-                        dir.getName(),
-                        file);
-                parts.add(part);
+                    MediaType mediaType = MediaType.parse(intent.getClipData().getDescription().getMimeType(0));
+
+                    final String filename = dir.getName().contains(".") ? dir.getName() :  dir.getName()+"."+mediaType.subtype();
+                    RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)), dir);
+                    MultipartBody.Part part = MultipartBody.Part.createFormData(
+                            "files",
+                            filename,
+                            file);
+                    parts.add(part);
+                }
             }
         }
 
