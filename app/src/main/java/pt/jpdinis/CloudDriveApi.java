@@ -35,7 +35,7 @@ public interface CloudDriveApi {
             .build();
 
     Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(CloudDriveApi.LocalApiURL)
+            .baseUrl(CloudDriveApi.ApiURL)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build();
 
