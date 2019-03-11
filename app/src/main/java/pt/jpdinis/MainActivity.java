@@ -2,49 +2,39 @@ package pt.jpdinis;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.ParcelFileDescriptor;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
-import java.util.prefs.Preferences;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -53,8 +43,6 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.os.Environment.getExternalStorageDirectory;
 
@@ -79,19 +67,19 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        recyclerView = (RecyclerView) findViewById(R.id.fileList);
+        recyclerView = findViewById(R.id.fileList);
         recyclerView.setHasFixedSize(false);
 
         layoutManager = new LinearLayoutManager(this);
@@ -125,7 +113,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -134,27 +122,34 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void logout(View view){
-        /*CloudDriveApi.PostJSONData postJSONRunnable = new CloudDriveApi.PostJSONData("https://clouddriveserver.azurewebsites.net/smartlogout",object);
-        Thread t = new Thread(postJSONRunnable);
-        t.start();
-        JSONObject data;
+        Call<JsonElement> logout = CloudDriveApi.service.logout();
 
-        while ((data=postJSONRunnable.getData())==null);
+        logout.enqueue(new Callback<JsonElement>() {
+            @Override
+            public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+                if(response.body().getAsJsonObject().get("success").getAsBoolean()){
+                    SharedPreferences sharedPreferences = getSharedPreferences( getString(R.string.appName),0);
+                    sharedPreferences.edit().clear().commit();
 
-        SharedPreferences sharedPreferences = getSharedPreferences("CloudDrive",0);
-        sharedPreferences.edit().clear().commit();
+                    Intent intent = new Intent(mainActivity, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }
 
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
-        finish();*/
+            @Override
+            public void onFailure(Call<JsonElement> call, Throwable t) {
+                Toast.makeText(mainActivity,getString(R.string.logoutFailed),Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-        TextView navTitle = (TextView) findViewById(R.id.nav_title);
-        TextView navSubtitle = (TextView) findViewById(R.id.nav_subtitle);
+        TextView navTitle = findViewById(R.id.nav_title);
+        TextView navSubtitle = findViewById(R.id.nav_subtitle);
         User user = new CloudPreferences(mainActivity).getUser();
         navTitle.setText(user.getUsername());
         navSubtitle.setText(user.getEmail());
@@ -171,7 +166,6 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
@@ -181,7 +175,7 @@ public class MainActivity extends AppCompatActivity
             verifyStoragePermissions(mainActivity);
             requestPermission(mainActivity);
 
-            File file = new File(getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive");
+            File file = new File(getExternalStorageDirectory().getAbsolutePath() +File.separator+ getString(R.string.appName));
 
             mAdapter = new FileAdapter(file.list());
             recyclerView.setAdapter(mAdapter);
@@ -215,7 +209,7 @@ public class MainActivity extends AppCompatActivity
             });
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -230,8 +224,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private boolean[] checkExternalMedia(){
-        boolean mExternalStorageAvailable = false;
-        boolean mExternalStorageWriteable = false;
         String state = Environment.getExternalStorageState();
 
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -284,23 +276,23 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     if (response.isSuccessful()) {
-                        Toast.makeText(mainActivity, "Server contacted and has file", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, getString(R.string.fileExistsServer), Toast.LENGTH_SHORT).show();
 
                         boolean writtenToDisk = writeResponseBodyToDisk(response.body(), filename);
 
-                        Toast.makeText(mainActivity, "Download successful? " + writtenToDisk, Toast.LENGTH_LONG).show();
+                        Toast.makeText(mainActivity, getString(R.string.downloadSuccess) + writtenToDisk, Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(mainActivity, "Server contact failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, getString(R.string.connectionFailed), Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Toast.makeText(mainActivity, "Download failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(mainActivity, getString(R.string.downloadFailed) + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
         }else{
-            String filename = getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive/"+((TextView) view.findViewById(R.id.textView)).getText().toString();
+            String filename = getExternalStorageDirectory().getAbsolutePath() + File.separator +  getString(R.string.appName)+File.separator+((TextView) view.findViewById(R.id.textView)).getText().toString();
             File dir = new File(filename);
             RequestBody file = RequestBody.create(MediaType.parse(getMimeType(filename)),dir);
             MultipartBody.Part part = MultipartBody.Part.createFormData(
@@ -313,15 +305,15 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                     if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
-                        Toast.makeText(mainActivity, "File Uploaded", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, getString(R.string.uploadSuccess), Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(mainActivity, "Upload failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, getString(R.string.uploadFailed), Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<JsonElement> call, Throwable t) {
-                    Toast.makeText(mainActivity, "Upload failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(mainActivity, getString(R.string.uploadFailed)+ ": " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
         }
@@ -359,12 +351,12 @@ public class MainActivity extends AppCompatActivity
 
             try {
                 // todo change the file location/name according to your needs
-                File dir = new File(getExternalStorageDirectory().getAbsolutePath() + "/CloudDrive");
+                File dir = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + getString(R.string.appName));
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
 
-                File file = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + "CloudDrive" + File.separator + params[0].filename);
+                File file = new File(getExternalStorageDirectory().getAbsolutePath() + File.separator + getString(R.string.appName) + File.separator + params[0].filename);
                 if (!file.exists()) {
                     file.createNewFile();
                 }

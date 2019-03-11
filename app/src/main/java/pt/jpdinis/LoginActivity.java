@@ -4,11 +4,9 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
-
-import android.support.v7.app.AppCompatActivity;
-
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -19,15 +17,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * A login screen that offers login via Email/Password.
@@ -46,8 +41,6 @@ public class LoginActivity extends AppCompatActivity {
     private View mLoginFormView;
     boolean cancel = false;
     View focusView = null;
-    CloudDriveApi service;
-    Retrofit retrofit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +52,9 @@ public class LoginActivity extends AppCompatActivity {
         loginActivity=this;
 
         // Set up the login form.
-        mUserView = (EditText) findViewById(R.id.userEditText);
+        mUserView = findViewById(R.id.userEditText);
 
-        mPasswordView = (EditText) findViewById(R.id.passEditText);
+        mPasswordView = findViewById(R.id.passEditText);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -74,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        Button loginButton = (Button) findViewById(R.id.loginButton);
+        Button loginButton = findViewById(R.id.loginButton);
         loginButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {

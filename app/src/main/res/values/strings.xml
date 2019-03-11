@@ -21,4 +21,11 @@
     <string name="local_files">Local Files</string>
     <string name="online_files">Online Files</string>
     <string name="icon">Icon</string>
+    <string name="logoutFailed">Logout Failed</string>
+    <string name="fileExistsServer">Server contacted and has file</string>
+    <string name="downloadSuccess">Download successful:</string>
+    <string name="connectionFailed">Server contact failed</string>
+    <string name="downloadFailed">Download failed:</string>
+    <string name="uploadSuccess">File Uploaded</string>
+    <string name="uploadFailed">Upload failed</string>
 </resources>

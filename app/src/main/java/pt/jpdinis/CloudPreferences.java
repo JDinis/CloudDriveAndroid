@@ -7,7 +7,7 @@ public class CloudPreferences {
     SharedPreferences Preferences;
 
     public CloudPreferences(Activity activity){
-        this.Preferences = activity.getSharedPreferences("CloudDrive",0);
+        this.Preferences = activity.getSharedPreferences(activity.getString(R.string.appName),0);
     }
 
     User getUser(){
