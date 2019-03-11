@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.MultipartBody;
@@ -54,7 +55,7 @@ public interface CloudDriveApi {
 
     @FormUrlEncoded
     @POST("login")
-    Call<JsonElement> login(@Field("username") String username,@Field("password") String password);
+    Call<JsonElement> login(@Field("username") String username, @Field("password") String password);
 
     @Streaming
     @GET("/search/{filename}")
@@ -63,6 +64,10 @@ public interface CloudDriveApi {
     @Multipart
     @POST("/files/upload")
     Call<JsonElement> uploadFile(@Part MultipartBody.Part files);
+
+    @Multipart
+    @POST("/files/upload")
+    Call<JsonElement> uploadFiles(@Part List<MultipartBody.Part> files);
 
     @DELETE("/files/{filename}")
     Call<JsonElement> deleteFile(@Path("filename") String filename);

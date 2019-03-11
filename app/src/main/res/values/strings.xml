@@ -26,7 +26,9 @@
     <string name="connectionFailed">Server contact failed</string>
     <string name="downloadFailed">Download failed:</string>
     <string name="uploadSuccess">File Uploaded</string>
+    <string name="uploadsSuccess">Files Uploaded</string>
     <string name="uploadFailed">Upload failed</string>
+    <string name="uploadsFailed">Upload files failed</string>
     <string name="searchFile">Search File to Upload</string>
     <string name="download" translatable="false">Download</string>
     <string name="upload">Upload</string>

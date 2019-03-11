@@ -24,4 +24,6 @@
     <string name="delete">Apagar</string>
     <string name="fileDeleteSuccess">Ficheiro apagado com sucesso</string>
     <string name="fileDeleteFailed">Falha ao apagar ficheiro</string>
+    <string name="uploadsSuccess">Ficheiros Enviados</string>
+    <string name="uploadsFailed">Falha ao enviar ficheiros</string>
 </resources>

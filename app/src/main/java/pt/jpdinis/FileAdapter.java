@@ -14,40 +14,13 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder>  {
+public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> {
     private String[] mDataset;
-
-    public static class MyViewHolder extends RecyclerView.ViewHolder  implements View.OnCreateContextMenuListener {
-        public ImageView imageView;
-        public TextView textView;
-        public MyViewHolder(LinearLayout v) {
-            super(v);
-            imageView = v.findViewById(R.id.imageView2);
-            textView = v.findViewById(R.id.textView);
-            v.setOnCreateContextMenuListener(this);
-        }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            if(MainActivity.download) {
-                menu.add(Menu.NONE, R.id.downloadMenuOption,
-                        Menu.NONE, R.string.download);
-                MenuItem download = menu.findItem(R.id.downloadMenuOption);
-                download.setVisible(true);
-            }else{
-                menu.add(Menu.NONE, R.id.uploadMenuOption,
-                        Menu.NONE, R.string.upload);
-                MenuItem upload = menu.findItem(R.id.uploadMenuOption);
-                upload.setVisible(true);
-            }
-
-            menu.add(Menu.NONE, R.id.deleteMenuOption,
-                    Menu.NONE, R.string.delete);
-
-        }
-    }
-
     private int position;
+
+    public FileAdapter(String[] myDataset) {
+        mDataset = myDataset;
+    }
 
     public int getPosition() {
         return position;
@@ -55,10 +28,6 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
 
     public void setPosition(int position) {
         this.position = position;
-    }
-
-    public FileAdapter(String[] myDataset) {
-        mDataset = myDataset;
     }
 
     @Override
@@ -77,7 +46,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         holder.textView.setText(mDataset[position]);
-        String ext = mDataset[position].substring(mDataset[position].lastIndexOf('.')+1);
+        String ext = mDataset[position].substring(mDataset[position].lastIndexOf('.') + 1);
 
         final MyViewHolder myViewHolder = holder;
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -92,9 +61,9 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(MainActivity.download){
+                if (MainActivity.download) {
                     MainActivity.download(v);
-                }else{
+                } else {
                     MainActivity.upload(v);
                 }
             }
@@ -102,23 +71,23 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
 
         holder.imageView.setBackgroundResource(R.drawable.cloudfile);
 
-        if(ext.equals("txt")){
+        if (ext.equals("txt")) {
             holder.imageView.setBackgroundResource(R.drawable.document);
         }
 
-        if(ext.equals("png")||ext.equals("jpg")||ext.equals("jpeg")||ext.equals("gif")||ext.equals("webp")||ext.equals("bmp")||ext.equals("tiff")){
+        if (ext.equals("png") || ext.equals("jpg") || ext.equals("jpeg") || ext.equals("gif") || ext.equals("webp") || ext.equals("bmp") || ext.equals("tiff")) {
             holder.imageView.setBackgroundResource(R.drawable.image);
         }
 
-        if(ext.equals("rar")||ext.equals("7z")||ext.equals("zip")||ext.equals("tar")||ext.equals("gz")||ext.equals("tgz")){
+        if (ext.equals("rar") || ext.equals("7z") || ext.equals("zip") || ext.equals("tar") || ext.equals("gz") || ext.equals("tgz")) {
             holder.imageView.setBackgroundResource(R.drawable.archive);
         }
 
-        if(ext.equals("pdf")){
+        if (ext.equals("pdf")) {
             holder.imageView.setBackgroundResource(R.drawable.pdf);
         }
 
-        if(ext.equals("exe")){
+        if (ext.equals("exe")) {
             holder.imageView.setBackgroundResource(R.drawable.exe);
         }
     }
@@ -129,7 +98,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         super.onViewRecycled(holder);
     }
 
-    public void addItem(String item){
+    public void addItem(String item) {
         ArrayList<String> dataset = new ArrayList<>();
         dataset.addAll(Arrays.asList(mDataset));
         dataset.add(item);
@@ -137,10 +106,10 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         this.notifyDataSetChanged();
     }
 
-    public void removeItem(String item){
+    public void removeItem(String item) {
         ArrayList<String> dataset = new ArrayList<>();
         dataset.addAll(Arrays.asList(mDataset));
-        dataset.remove(dataset.indexOf(item));
+        dataset.remove(item);
         this.mDataset = dataset.toArray(new String[0]);
         this.notifyDataSetChanged();
     }
@@ -148,10 +117,41 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        if(mDataset==null){
-            return  0;
-        }else {
+        if (mDataset == null) {
+            return 0;
+        } else {
             return mDataset.length;
+        }
+    }
+
+    public static class MyViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
+        public ImageView imageView;
+        public TextView textView;
+
+        public MyViewHolder(LinearLayout v) {
+            super(v);
+            imageView = v.findViewById(R.id.imageView2);
+            textView = v.findViewById(R.id.textView);
+            v.setOnCreateContextMenuListener(this);
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+            if (MainActivity.download) {
+                menu.add(Menu.NONE, R.id.downloadMenuOption,
+                        Menu.NONE, R.string.download);
+                MenuItem download = menu.findItem(R.id.downloadMenuOption);
+                download.setVisible(true);
+            } else {
+                menu.add(Menu.NONE, R.id.uploadMenuOption,
+                        Menu.NONE, R.string.upload);
+                MenuItem upload = menu.findItem(R.id.uploadMenuOption);
+                upload.setVisible(true);
+            }
+
+            menu.add(Menu.NONE, R.id.deleteMenuOption,
+                    Menu.NONE, R.string.delete);
+
         }
     }
 }

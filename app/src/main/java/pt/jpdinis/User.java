@@ -19,7 +19,7 @@ public class User {
     @SerializedName("admin")
     boolean Admin;
 
-    public User( String firstName, String lastName,String username,String password, String email, String profilepic,  Boolean admin) {
+    public User(String firstName, String lastName, String username, String password, String email, String profilepic, Boolean admin) {
         this.Username = username;
         this.FirstName = firstName;
         this.LastName = lastName;

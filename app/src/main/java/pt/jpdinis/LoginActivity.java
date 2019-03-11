@@ -29,18 +29,17 @@ import retrofit2.Response;
  */
 public class LoginActivity extends AppCompatActivity {
 
+    boolean cancel = false;
+    View focusView = null;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private LoginActivity loginActivity=null;
-
+    private LoginActivity loginActivity = null;
     // UI references.
     private EditText mUserView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    boolean cancel = false;
-    View focusView = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_login);
-        loginActivity=this;
+        loginActivity = this;
 
         // Set up the login form.
         mUserView = findViewById(R.id.userEditText);
@@ -93,18 +92,18 @@ public class LoginActivity extends AppCompatActivity {
         String Username = mUserView.getText().toString();
         String Password = mPasswordView.getText().toString();
 
-        Call<JsonElement> login =  CloudDriveApi.service.login(Username,Password);
+        Call<JsonElement> login = CloudDriveApi.service.login(Username, Password);
 
         login.enqueue(new Callback<JsonElement>() {
             @Override
             public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
-                if(response.body().getAsJsonObject().has("User")){
-                    User user = new Gson().fromJson(response.body().getAsJsonObject().get("User").getAsJsonObject(),User.class);
+                if (response.body().getAsJsonObject().has("User")) {
+                    User user = new Gson().fromJson(response.body().getAsJsonObject().get("User").getAsJsonObject(), User.class);
 
-                    if(response.body().getAsJsonObject().get("Error").getAsJsonObject().has("msg")){
-                        if(response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsJsonNull() == JsonNull.INSTANCE){
+                    if (response.body().getAsJsonObject().get("Error").getAsJsonObject().has("msg")) {
+                        if (response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsJsonNull() == JsonNull.INSTANCE) {
                             new CloudPreferences(loginActivity).setUser(user);
-                        }else {
+                        } else {
 
                             if (response.body().getAsJsonObject().get("Error").getAsJsonObject().get("msg").getAsString().contains("Password")) {
                                 mPasswordView.setError(getString(R.string.errorIncorrectPassword));
@@ -118,10 +117,10 @@ public class LoginActivity extends AppCompatActivity {
                                 cancel = true;
                             }
                         }
-                    }else{
+                    } else {
                         new CloudPreferences(loginActivity).setUser(user);
                     }
-                }else{
+                } else {
                     mUserView.setError(getString(R.string.errorInvalidUsername));
                     focusView = mUserView;
                     cancel = true;

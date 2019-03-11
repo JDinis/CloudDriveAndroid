@@ -14,7 +14,6 @@ import retrofit2.Response;
 
 
 public class LauncherActivity extends AppCompatActivity {
-    JsonElement response;
     LauncherActivity activity;
 
     @Override
@@ -29,22 +28,21 @@ public class LauncherActivity extends AppCompatActivity {
         StrictMode.setThreadPolicy(policy);
 
         User user = new CloudPreferences(this).getUser();
-        Intent activityIntent = null;
 
-        if(user.getUsername()!=null) {
+        if (user.getUsername() != null) {
             Call<JsonElement> isLogged = CloudDriveApi.service.isLogged(user.Username);
 
             isLogged.enqueue(new Callback<JsonElement>() {
                 @Override
                 public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                     try {
-                            if (response.body().getAsJsonObject().get("isLoggedIn").getAsBoolean()) {
-                                startActivity(new Intent(activity, MainActivity.class));
-                                finish();
-                            } else {
-                                startActivity(new Intent(activity, LoginActivity.class));
-                                finish();
-                            }
+                        if (response.body().getAsJsonObject().get("isLoggedIn").getAsBoolean()) {
+                            startActivity(new Intent(activity, MainActivity.class));
+                            finish();
+                        } else {
+                            startActivity(new Intent(activity, LoginActivity.class));
+                            finish();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -56,7 +54,7 @@ public class LauncherActivity extends AppCompatActivity {
                     recreate();
                 }
             });
-        }else{
+        } else {
             startActivity(new Intent(activity, LoginActivity.class));
             finish();
         }
