@@ -1,7 +1,12 @@
 package pt.jpdinis;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -12,6 +17,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -54,6 +61,7 @@ import static android.os.Environment.getExternalStorageDirectory;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     public static final int REQUEST_WRITE_STORAGE = 112;
+    public static String Channel_ID = "CloudDrive";
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     static boolean download = true;
     private static RecyclerView recyclerView;
@@ -64,6 +72,13 @@ public class MainActivity extends AppCompatActivity
     };
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
+    NotificationManagerCompat notificationManagerCompat;
+    NotificationManager notificationManager;
+    Intent notificationIntent;
+    PendingIntent notificationPendingIntent;
+
+    NotificationCompat.Builder builderCompat;
+    Notification.Builder builder;
 
     private static void requestPermission(Activity context) {
         boolean hasPermission = (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
@@ -72,6 +87,21 @@ public class MainActivity extends AppCompatActivity
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_WRITE_STORAGE);
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+            CharSequence name = getString(R.string.appName);
+            String description = getString(R.string.appName);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(name.toString(), name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
     }
 
     private static boolean[] checkExternalMedia() {
@@ -151,7 +181,7 @@ public class MainActivity extends AppCompatActivity
                 "files",
                 dir.getName(),
                 file);
-        Call<JsonElement> files = CloudDriveApi.service.uploadFile(part);
+        Call<JsonElement> files = CloudDriveApi.service.uploadFile(part,new CloudPreferences(mainActivity).getUser().Username);
 
         files.enqueue(new Callback<JsonElement>() {
             @Override
@@ -211,30 +241,65 @@ public class MainActivity extends AppCompatActivity
                 "files",
                 filename,
                 file);
-        Call<JsonElement> files = CloudDriveApi.service.uploadFile(part);
+        Call<JsonElement> files = CloudDriveApi.service.uploadFile(part,new CloudPreferences(mainActivity).getUser().Username);
 
         files.enqueue(new Callback<JsonElement>() {
             @Override
             public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                 if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
                     Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadSuccess), Toast.LENGTH_SHORT).show();
+                    if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                        mainActivity.builder.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadSuccess));
+                        mainActivity.notificationManager.notify(88591, mainActivity.builder.build());
+                    }else {
+                        mainActivity.builderCompat.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadSuccess));
+                        mainActivity.builderCompat.build();
+                    }
+
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        mainActivity.finishAffinity();
+                        System.exit(0);
+                    } else {
+                        Intent intent = mainActivity.getBaseContext().getPackageManager()
+                                .getLaunchIntentForPackage(mainActivity.getBaseContext().getPackageName());
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        mainActivity.startActivity(intent);
+                    }
+
                 } else {
+                    if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                        mainActivity.builder.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadFailed));
+                        mainActivity.notificationManager.notify(88591, mainActivity.builder.build());
+                    }else {
+                        mainActivity.builderCompat.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadFailed));
+                        mainActivity.builderCompat.build();
+                    }
                     Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadFailed), Toast.LENGTH_SHORT).show();
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    mainActivity.finishAffinity();
-                    System.exit(0);
-                } else {
-                    Intent intent = mainActivity.getBaseContext().getPackageManager()
-                            .getLaunchIntentForPackage(mainActivity.getBaseContext().getPackageName());
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    mainActivity.startActivity(intent);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        mainActivity.finishAffinity();
+                        System.exit(0);
+                    } else {
+                        Intent intent = mainActivity.getBaseContext().getPackageManager()
+                                .getLaunchIntentForPackage(mainActivity.getBaseContext().getPackageName());
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        mainActivity.startActivity(intent);
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<JsonElement> call, Throwable t) {
                 Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadFailed) + ": " + t.getMessage(), Toast.LENGTH_LONG).show();
+
+                if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                    mainActivity.builder.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadFailed)+": "+t.getMessage());
+                    mainActivity.notificationManager.notify(88591, mainActivity.builder.build());
+                }else {
+                    mainActivity.builderCompat.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadFailed)+": "+t.getMessage());
+                    mainActivity.builderCompat.build();
+                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     mainActivity.finishAffinity();
                     System.exit(0);
@@ -280,15 +345,31 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        Call<JsonElement> files = CloudDriveApi.service.uploadFiles(parts);
+        Call<JsonElement> files = CloudDriveApi.service.uploadFiles(parts,new CloudPreferences(mainActivity).getUser().Username);
 
         files.enqueue(new Callback<JsonElement>() {
             @Override
             public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
                 if (response.body().getAsJsonObject().get("success").getAsBoolean()) {
                     Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadsSuccess), Toast.LENGTH_SHORT).show();
+
+                    if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                        mainActivity.builder.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadsSuccess));
+                        mainActivity.notificationManager.notify(88591, mainActivity.builder.build());
+                    }else {
+                        mainActivity.builderCompat.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadsSuccess));
+                        mainActivity.builderCompat.build();
+                    }
                 } else {
                     Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadsFailed), Toast.LENGTH_SHORT).show();
+
+                    if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                        mainActivity.builder.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadsFailed));
+                        mainActivity.notificationManager.notify(88591, mainActivity.builder.build());
+                    }else {
+                        mainActivity.builderCompat.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadsFailed));
+                        mainActivity.builderCompat.build();
+                    }
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     mainActivity.finishAffinity();
@@ -304,6 +385,14 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onFailure(Call<JsonElement> call, Throwable t) {
                 Toast.makeText(mainActivity, mainActivity.getString(R.string.uploadsFailed) + ": " + t.getMessage(), Toast.LENGTH_LONG).show();
+
+                if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.O) {
+                    mainActivity.builder.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadsFailed)+": "+t.getMessage());
+                    mainActivity.notificationManager.notify(88591, mainActivity.builder.build());
+                }else {
+                    mainActivity.builderCompat.setContentIntent(mainActivity.notificationPendingIntent).setContentText(mainActivity.getString(R.string.uploadsFailed)+": "+t.getMessage());
+                    mainActivity.builderCompat.build();
+                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     mainActivity.finishAffinity();
                     System.exit(0);
@@ -339,6 +428,25 @@ public class MainActivity extends AppCompatActivity
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
+        notificationIntent = new Intent(this, MainActivity.class);
+        notificationPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(this, getString(R.string.appName))
+                    .setSmallIcon(R.drawable.upload)
+                    .setContentTitle(getString(R.string.appName))
+                    .setContentText("")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setChannelId(Channel_ID);
+        }else{
+            builderCompat = new NotificationCompat.Builder(this, getString(R.string.appName))
+                    .setSmallIcon(R.drawable.upload)
+                    .setContentTitle(getString(R.string.appName))
+                    .setContentText("")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setChannelId(Channel_ID);
+        }
+        createNotificationChannel();
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             uploadSingle(intent);
@@ -584,7 +692,7 @@ public class MainActivity extends AppCompatActivity
                         "files",
                         dir.getName(),
                         file);
-                Call<JsonElement> files = CloudDriveApi.service.uploadFile(part);
+                Call<JsonElement> files = CloudDriveApi.service.uploadFile(part,new CloudPreferences(mainActivity).getUser().Username);
 
                 files.enqueue(new Callback<JsonElement>() {
                     @Override

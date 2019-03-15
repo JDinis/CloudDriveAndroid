@@ -24,8 +24,8 @@ import retrofit2.http.Path;
 import retrofit2.http.Streaming;
 
 public interface CloudDriveApi {
-    String ApiURL = "https://clouddriveserver.azurewebsites.net:443/";
-    String LocalApiURL = "http://192.168.1.66:3001/";
+    String ApiURL = "https://clouddrive.azurewebsites.net:443/";
+    String LocalApiURL = "http://192.168.1.5:3001/";
 
     Gson gson = new GsonBuilder()
             .setLenient()
@@ -62,12 +62,12 @@ public interface CloudDriveApi {
     Call<ResponseBody> downloadFile(@Path("filename") String filename);
 
     @Multipart
-    @POST("/files/upload")
-    Call<JsonElement> uploadFile(@Part MultipartBody.Part files);
+    @POST("/files/uploadsmart/{username}")
+    Call<JsonElement> uploadFile(@Part MultipartBody.Part files,@Path("username") String username);
 
     @Multipart
-    @POST("/files/upload")
-    Call<JsonElement> uploadFiles(@Part List<MultipartBody.Part> files);
+    @POST("/files/uploadsmart/{username}")
+    Call<JsonElement> uploadFiles(@Part List<MultipartBody.Part> files,@Path("username") String username);
 
     @DELETE("/files/{filename}")
     Call<JsonElement> deleteFile(@Path("filename") String filename);
